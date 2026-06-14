@@ -8,6 +8,7 @@ import '../../../domain/screen_stabilizer/screen_stabilizer.dart';
 
 class CourseDetailsPage extends StatefulWidget {
   final String courseId;
+
   const CourseDetailsPage({super.key, required this.courseId});
 
   @override
@@ -17,20 +18,27 @@ class CourseDetailsPage extends StatefulWidget {
 class _CourseDetailsPageState extends State<CourseDetailsPage> {
   late Future<Course?> _courseFuture;
   Lesson? _selectedLesson;
-  VideoPlayerController? _videoController; // Added controller
+  VideoPlayerController? _videoController;
+  bool noVideoAvailable = false;
 
   @override
   void initState() {
     super.initState();
-    _courseFuture = getIt<CourseRepository>().getCourseById(widget.courseId).then((course) {
-      if (course != null && course.modules.isNotEmpty && course.modules[0].lessons.isNotEmpty) {
-        setState(() {
-          _selectedLesson = course.modules[0].lessons[0];
-          _initializeVideo(_selectedLesson?.videoUrl); // Initialize first video
+    _courseFuture = getIt<CourseRepository>()
+        .getCourseById(widget.courseId)
+        .then((course) {
+          if (course != null &&
+              course.modules.isNotEmpty &&
+              course.modules[0].lessons.isNotEmpty) {
+            setState(() {
+              _selectedLesson = course.modules[0].lessons[0];
+              _initializeVideo(
+                _selectedLesson?.videoUrl,
+              ); // Initialize first video
+            });
+          }
+          return course;
         });
-      }
-      return course;
-    });
   }
 
   @override
@@ -45,6 +53,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     _videoController = null;
 
     if (url == null || url.isEmpty) {
+      noVideoAvailable = true;
       setState(() {});
       return;
     }
@@ -73,9 +82,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Course Content'),
-      ),
+      appBar: AppBar(title: const Text('Course Content')),
       body: FutureBuilder<Course?>(
         future: _courseFuture,
         builder: (context, snapshot) {
@@ -93,14 +100,9 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
                 // Desktop/Tablet Layout
                 return Row(
                   children: [
-                    SizedBox(
-                      width: 300,
-                      child: _buildSidebar(course),
-                    ),
+                    SizedBox(width: 300, child: _buildSidebar(course)),
                     const VerticalDivider(width: 1),
-                    Expanded(
-                      child: _buildContentArea(),
-                    ),
+                    Expanded(child: _buildContentArea()),
                   ],
                 );
               } else {
@@ -109,10 +111,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
                   children: [
                     Expanded(child: _buildContentArea()),
                     const Divider(height: 1),
-                    SizedBox(
-                      height: 200,
-                      child: _buildSidebar(course),
-                    ),
+                    SizedBox(height: 200, child: _buildSidebar(course)),
                   ],
                 );
               }
@@ -130,20 +129,27 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
         final module = course.modules[index];
         return ExpansionTile(
           initiallyExpanded: index == 0,
-          title: Text(module.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+          title: Text(
+            module.title,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
           children: module.lessons.map((lesson) {
             return ListTile(
               selected: _selectedLesson?.id == lesson.id,
               title: Text(lesson.title),
               leading: Icon(
-                lesson.isCompleted ? Icons.check_circle : Icons.play_circle_outline,
+                lesson.isCompleted
+                    ? Icons.check_circle
+                    : Icons.play_circle_outline,
                 color: lesson.isCompleted ? Colors.green : null,
               ),
               onTap: () {
                 if (_selectedLesson?.id != lesson.id) {
                   setState(() {
                     _selectedLesson = lesson;
-                    _initializeVideo(lesson.videoUrl); // Update video on lesson change
+                    _initializeVideo(
+                      lesson.videoUrl,
+                    ); // Update video on lesson change
                   });
                 }
               },
@@ -169,34 +175,44 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
               aspectRatio: 16 / 9,
               child: Container(
                 color: Colors.black,
-                child: _videoController != null && _videoController!.value.isInitialized
+                child:
+                    _videoController != null &&
+                        _videoController!.value.isInitialized
                     ? GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _videoController!.value.isPlaying
-                          ? _videoController!.pause()
-                          : _videoController!.play();
-                    });
-                  },
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      VideoPlayer(_videoController!),
-                      if (!_videoController!.value.isPlaying)
-                        const Icon(Icons.play_arrow, size: 80, color: Colors.white70),
-                    ],
-                  ),
-                )
+                        onTap: () {
+                          setState(() {
+                            _videoController!.value.isPlaying
+                                ? _videoController!.pause()
+                                : _videoController!.play();
+                          });
+                        },
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            VideoPlayer(_videoController!),
+                            if (!_videoController!.value.isPlaying)
+                              const Icon(
+                                Icons.play_arrow,
+                                size: 80,
+                                color: Colors.white70,
+                              ),
+                          ],
+                        ),
+                      )
+                    : noVideoAvailable
+                    ? Center(child: Text('No Video Available!', style: TextStyle(color: Colors.white),))
                     : const Center(
-                  child: CircularProgressIndicator(color: Colors.white),
-                ),
+                        child: CircularProgressIndicator(color: Colors.white),
+                      ),
               ),
             ),
           ),
           const SizedBox(height: 24),
           Text(
             _selectedLesson!.title,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           const Text(
@@ -205,7 +221,8 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
           ),
           const SizedBox(height: 8),
           Text(
-            _selectedLesson!.notes ?? 'In this lesson, we will cover the core concepts of ${_selectedLesson!.title}. Follow along with the provided resources.',
+            _selectedLesson!.notes ??
+                'In this lesson, we will cover the core concepts of ${_selectedLesson!.title}. Follow along with the provided resources.',
             style: const TextStyle(fontSize: 16),
           ),
           const SizedBox(height: 24),
