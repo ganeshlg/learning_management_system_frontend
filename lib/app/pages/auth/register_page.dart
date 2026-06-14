@@ -4,6 +4,7 @@ import 'package:learning_management_system_student/data/models/register_response
 import '../../../domain/repositories/auth_repository.dart';
 import '../../../domain/screen_stabilizer/screen_stabilizer.dart';
 import '../../../domain/services/service_locator.dart';
+import '../../../domain/utils/loading_dialog.dart';
 
 class RegisterPage extends StatelessWidget {
   RegisterPage({super.key});
@@ -101,12 +102,14 @@ class RegisterPage extends StatelessWidget {
                     );
                     return;
                   } else {
+                    showLoadingDialog(context);
                     RegistrationResponse registrationResponse =
                         await getIt<AuthRepository>().register(
                           name: nameController.text,
                           email: emailController.text,
                           password: passwordController.text,
                         );
+                    Navigator.pop(context);
                     if (registrationResponse.isSuccess) {
                       Navigator.of(context).pop();
                       ScaffoldMessenger.of(context).showSnackBar(

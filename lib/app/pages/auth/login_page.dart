@@ -5,6 +5,7 @@ import 'package:learning_management_system_student/domain/repositories/auth_repo
 import '../../../data/models/login_response.dart';
 import '../../../domain/screen_stabilizer/screen_stabilizer.dart';
 import '../../../domain/services/service_locator.dart';
+import '../../../domain/utils/loading_dialog.dart';
 
 class LoginPage extends StatelessWidget {
   LoginPage({super.key});
@@ -63,10 +64,12 @@ class LoginPage extends StatelessWidget {
                       ),
                     );
                   } else {
+                    showLoadingDialog(context);
                     LoginResponse loginResponse = await getIt<AuthRepository>().login(
                       emailController.text,
                       passwordController.text,
                     );
+                    Navigator.pop(context);
                     if(loginResponse.isSuccess){
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
