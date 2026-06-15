@@ -24,7 +24,7 @@ class MockCourseRepository implements CourseRepository {
               id: 'l1',
               title: 'Difference between Engineer vs Entrepreneur',
               type: LessonType.recorded,
-              videoUrl: "https://learning-management-system-api-gateway.onrender.com/api/videos/civil.mp4"
+              videoUrl: "https://learning-management-system-api-gateway-v1.onrender.com/api/videos/civil.mp4"
             ),
             Lesson(
               id: 'l2',
