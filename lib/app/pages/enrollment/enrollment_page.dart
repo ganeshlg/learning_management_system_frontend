@@ -14,7 +14,7 @@ class EnrollmentPage extends StatelessWidget {
             _HeroSection(),
             _BenefitsSection(),
             _CourseOutcomes(),
-            _Testimonials(),
+            // _Testimonials(),
             _FAQSection(),
             _Footer(),
           ],
@@ -36,7 +36,7 @@ class _HeroSection extends StatelessWidget {
           image: const AssetImage('assets/cover_image.png'),
           fit: BoxFit.cover,
           colorFilter: ColorFilter.mode(
-            Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
+            Theme.of(context).colorScheme.primary.withValues(alpha: 0.9),
             BlendMode.multiply,
           ),
         ),
@@ -55,7 +55,7 @@ class _HeroSection extends StatelessWidget {
             const SizedBox(height: 20),
             Text(
               'Build your own civil engineering business from scratch. Master the skills that matter.',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.white70),
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.white),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 40),
@@ -83,22 +83,50 @@ class _BenefitsSection extends StatelessWidget {
       child: ScreenStabilizer(
         child: Column(
           children: [
-            Text('Why Join Us?', style: Theme.of(context).textTheme.displaySmall),
+            Text(
+              'Why Join Us?',
+              style: Theme.of(context).textTheme.displaySmall,
+            ),
             const SizedBox(height: 40),
             LayoutBuilder(
               builder: (context, constraints) {
-                int crossAxisCount = constraints.maxWidth > 900 ? 4 : (constraints.maxWidth > 600 ? 2 : 1);
+                int crossAxisCount =
+                constraints.maxWidth > 900
+                    ? 4
+                    : (constraints.maxWidth > 600 ? 2 : 1);
+
                 return GridView.count(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   crossAxisCount: crossAxisCount,
                   mainAxisSpacing: 20,
                   crossAxisSpacing: 20,
+                  childAspectRatio: 0.9,
                   children: const [
-                    _BenefitCard(icon: Icons.lightbulb, title: 'Entrepreneurship Skills'),
-                    _BenefitCard(icon: Icons.trending_up, title: 'Business Growth'),
-                    _BenefitCard(icon: Icons.engineering, title: 'Industry Knowledge'),
-                    _BenefitCard(icon: Icons.people, title: 'Networking'),
+                    _BenefitCard(
+                      icon: Icons.lightbulb,
+                      title: 'Entrepreneurship Skills',
+                      description:
+                      'Develop practical leadership, problem-solving, and business-building skills.',
+                    ),
+                    _BenefitCard(
+                      icon: Icons.trending_up,
+                      title: 'Business Growth',
+                      description:
+                      'Learn strategies to scale your business and create sustainable growth.',
+                    ),
+                    _BenefitCard(
+                      icon: Icons.engineering,
+                      title: 'Industry Knowledge',
+                      description:
+                      'Gain insights into emerging trends, technologies, and best practices.',
+                    ),
+                    _BenefitCard(
+                      icon: Icons.people,
+                      title: 'Networking',
+                      description:
+                      'Connect with entrepreneurs, mentors, investors, and industry experts.',
+                    ),
                   ],
                 );
               },
@@ -113,26 +141,53 @@ class _BenefitsSection extends StatelessWidget {
 class _BenefitCard extends StatelessWidget {
   final IconData icon;
   final String title;
-  const _BenefitCard({required this.icon, required this.title});
+  final String description;
+
+  const _BenefitCard({
+    required this.icon,
+    required this.title,
+    required this.description,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Card(
+      elevation: 2,
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 50, color: Theme.of(context).colorScheme.primary),
-            const SizedBox(height: 10),
-            Text(title, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.bold)),
+            Icon(
+              icon,
+              size: 50,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              description,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                height: 1.5,
+                color: Colors.grey.shade700,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 }
-
 class _CourseOutcomes extends StatelessWidget {
   @override
   Widget build(BuildContext context) {

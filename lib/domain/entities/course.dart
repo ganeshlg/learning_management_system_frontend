@@ -18,6 +18,6 @@ class Course {
     required this.price,
     required this.duration,
     required this.modules,
-    required this.instructorName,
+    required this.instructorName
   });
 }

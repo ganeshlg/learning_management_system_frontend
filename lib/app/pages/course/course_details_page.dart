@@ -19,6 +19,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
   late Future<Course?> _courseFuture;
   Lesson? _selectedLesson;
   VideoPlayerController? _videoController;
+  String? _currentVideoUrl;
   bool noVideoAvailable = false;
 
   @override
@@ -27,14 +28,14 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     _courseFuture = getIt<CourseRepository>()
         .getCourseById(widget.courseId)
         .then((course) {
-          if (course != null &&
-              course.modules.isNotEmpty &&
-              course.modules[0].lessons.isNotEmpty) {
+          if (course != null) {
             setState(() {
-              _selectedLesson = course.modules[0].lessons[0];
-              _initializeVideo(
-                _selectedLesson?.videoUrl,
-              ); // Initialize first video
+              if (course.modules.isNotEmpty &&
+                  course.modules[0].lessons.isNotEmpty) {
+                _selectedLesson = course.modules[0].lessons[0];
+                _currentVideoUrl = course.modules[0].videoUrl;
+                _initializeVideo(_currentVideoUrl); // Initialize module video
+              }
             });
           }
           return course;
@@ -53,10 +54,15 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     _videoController = null;
 
     if (url == null || url.isEmpty) {
-      noVideoAvailable = true;
-      setState(() {});
+      setState(() {
+        noVideoAvailable = true;
+      });
       return;
     }
+
+    setState(() {
+      noVideoAvailable = false;
+    });
 
     // Convert Drive preview link to direct stream link if necessary
     final directUrl = _convertDriveUrl(url);
@@ -147,9 +153,11 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
                 if (_selectedLesson?.id != lesson.id) {
                   setState(() {
                     _selectedLesson = lesson;
-                    _initializeVideo(
-                      lesson.videoUrl,
-                    ); // Update video on lesson change
+                    // If switching to a lesson in a module with a different video, update player
+                    if (_currentVideoUrl != module.videoUrl) {
+                      _currentVideoUrl = module.videoUrl;
+                      _initializeVideo(_currentVideoUrl);
+                    }
                   });
                 }
               },

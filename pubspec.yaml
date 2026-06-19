@@ -44,6 +44,7 @@ dependencies:
   shared_preferences:
   responsive_framework:
   dio:
+  quickalert:
 
 dev_dependencies:
   flutter_test:

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:quickalert/models/quickalert_animtype.dart';
+import 'package:quickalert/models/quickalert_type.dart';
+import 'package:quickalert/widgets/quickalert_dialog.dart';
 import '../../../domain/entities/course.dart';
 import '../../../domain/repositories/course_repository.dart';
 import '../../../domain/repositories/progress_repository.dart';
@@ -23,12 +26,32 @@ class _DashboardPageState extends State<DashboardPage> {
   void initState() {
     super.initState();
     _loadData();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      QuickAlert.show(
+        context: context,
+        type: QuickAlertType.success,
+        animType: QuickAlertAnimType.scale,
+        headerBackgroundColor: Colors.white,
+        title: 'Login Successful!',
+        text:
+        'Your journey from engineer to entrepreneur continues here. Learn, innovate, and create infrastructure that makes a lasting impact.',
+        onConfirmBtnTap: () {
+          Navigator.of(context).pop();
+        },
+        confirmBtnColor: Theme.of(context).primaryColor,
+        confirmBtnText: "Continue",
+        // width: MediaQuery.of(context).size.width>500?500:250,
+          width: 500,
+        borderRadius: 10
+      );
+    });
   }
 
   void _loadData() {
     final courseRepo = getIt<CourseRepository>();
     _purchasedCoursesFuture = courseRepo.getPurchasedCourses();
     _availableCoursesFuture = courseRepo.getAvailableCourses();
+
   }
 
   void _refreshCourses() {
@@ -60,6 +83,9 @@ class _DashboardPageState extends State<DashboardPage> {
 
   @override
   Widget build(BuildContext context) {
+
+
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dashboard'),
@@ -130,18 +156,43 @@ class _DashboardPageState extends State<DashboardPage> {
             child: Text('You haven\'t purchased any courses yet.'),
           );
         }
-        return SizedBox(
-          height: 200,
-          child: ListView.separated(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            scrollDirection: Axis.horizontal,
-            itemCount: courses.length,
-            separatorBuilder: (context, index) => const SizedBox(width: 16),
-            itemBuilder: (context, index) {
-              final course = courses[index];
-              return _PurchasedCourseCard(course: course);
-            },
-          ),
+        // return SizedBox(
+        //   height: 200,
+        //   child: ListView.separated(
+        //     padding: const EdgeInsets.symmetric(horizontal: 20),
+        //     scrollDirection: Axis.horizontal,
+        //     itemCount: courses.length,
+        //     separatorBuilder: (context, index) => const SizedBox(width: 16),
+        //     itemBuilder: (context, index) {
+        //       final course = courses[index];
+        //       return _PurchasedCourseCard(course: course);
+        //     },
+        //   ),
+        // );
+
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            int crossAxisCount = constraints.maxWidth > 900
+                ? 4 // was 3
+                : (constraints.maxWidth > 600 ? 3 : 2);
+
+            return GridView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: courses.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 1.1, // adjust as needed
+              ),
+              itemBuilder: (context, index) {
+                final course = courses[index];
+                return _PurchasedCourseCard(course: course);
+              },
+            );
+          },
         );
       },
     );
@@ -166,8 +217,9 @@ class _DashboardPageState extends State<DashboardPage> {
           return LayoutBuilder(
             builder: (context, constraints) {
               int crossAxisCount = constraints.maxWidth > 900
-                  ? 3
-                  : (constraints.maxWidth > 600 ? 2 : 1);
+                  ? 4 // was 3
+                  : (constraints.maxWidth > 600 ? 3 : 2);
+
               return GridView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 shrinkWrap: true,
@@ -175,9 +227,9 @@ class _DashboardPageState extends State<DashboardPage> {
                 itemCount: courses.length,
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: crossAxisCount,
-                  crossAxisSpacing: 20,
-                  mainAxisSpacing: 20,
-                  childAspectRatio: 0.8,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 1.1, // adjust as needed
                 ),
                 itemBuilder: (context, index) {
                   final course = courses[index];

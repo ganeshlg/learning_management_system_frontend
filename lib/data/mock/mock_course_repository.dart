@@ -19,12 +19,12 @@ class MockCourseRepository implements CourseRepository {
         Module(
           id: 'm1',
           title: 'Introduction to Entrepreneurship',
+          videoUrl: "https://learning-management-system-api-gateway-v1.onrender.com/api/videos/civil.mp4",
           lessons: [
             Lesson(
               id: 'l1',
               title: 'Difference between Engineer vs Entrepreneur',
               type: LessonType.recorded,
-              videoUrl: "https://learning-management-system-api-gateway-v1.onrender.com/api/videos/civil.mp4"
             ),
             Lesson(
               id: 'l2',
