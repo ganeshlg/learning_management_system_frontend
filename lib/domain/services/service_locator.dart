@@ -26,8 +26,8 @@ void setupServiceLocator() {
   //Network Manager
   getIt.registerLazySingleton<NetworkManager>(
     () => NetworkManager(
-      baseUrl: 'http://localhost:8000/api',
-      // baseUrl: 'https://learning-management-system-api-gateway-v1.onrender.com/api',
+      // baseUrl: 'http://localhost:8000/api',
+      baseUrl: 'https://learning-management-system-api-gateway-v1.onrender.com/api',
       allowBadCertificates: false,
     ),
   );
