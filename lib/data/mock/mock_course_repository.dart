@@ -19,7 +19,7 @@ class MockCourseRepository implements CourseRepository {
         Module(
           id: 'm1',
           title: 'Introduction to Entrepreneurship',
-          videoUrl: "https://learning-management-system-api-gateway-v1.onrender.com/api/videos/civil.mp4",
+          videoUrl: "https://learning- management-system-api-gateway-v1.onrender.com/api/videos/civil.mp4",
           lessons: [
             Lesson(
               id: 'l1',
@@ -572,7 +572,8 @@ class MockCourseRepository implements CourseRepository {
 
   @override
   Future<List<Course>> getAvailableCourses() async {
-    await Future.delayed(const Duration(milliseconds: 500));
+    // await Future.delayed(const Duration(milliseconds: 500));
+    List<Course> courses = [];
     return _courses.where((c) => !_purchasedCourseIds.contains(c.id)).toList();
   }
 

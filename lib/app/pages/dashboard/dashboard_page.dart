@@ -34,24 +34,23 @@ class _DashboardPageState extends State<DashboardPage> {
         headerBackgroundColor: Colors.white,
         title: 'Login Successful!',
         text:
-        'Your journey from engineer to entrepreneur continues here. Learn, innovate, and create infrastructure that makes a lasting impact.',
+            'Your journey from engineer to entrepreneur continues here. Learn, innovate, and create infrastructure that makes a lasting impact.',
         onConfirmBtnTap: () {
           Navigator.of(context).pop();
         },
         confirmBtnColor: Theme.of(context).primaryColor,
         confirmBtnText: "Continue",
         // width: MediaQuery.of(context).size.width>500?500:250,
-          width: 500,
-        borderRadius: 10
+        width: 500,
+        borderRadius: 10,
       );
     });
   }
 
-  void _loadData() {
+  Future<void> _loadData() async {
     final courseRepo = getIt<CourseRepository>();
     _purchasedCoursesFuture = courseRepo.getPurchasedCourses();
     _availableCoursesFuture = courseRepo.getAvailableCourses();
-
   }
 
   void _refreshCourses() {
@@ -83,9 +82,6 @@ class _DashboardPageState extends State<DashboardPage> {
 
   @override
   Widget build(BuildContext context) {
-
-
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dashboard'),

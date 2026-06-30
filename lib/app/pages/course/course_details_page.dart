@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart'; // Added import
+import 'package:video_player/video_player.dart';
+import '../../../data/network/network_manager.dart';
 import '../../../domain/entities/course.dart';
+import '../../../domain/entities/module.dart';
 import '../../../domain/entities/lesson.dart';
+import '../../../domain/entities/resource.dart';
 import '../../../domain/repositories/course_repository.dart';
 import '../../../domain/services/service_locator.dart';
 import '../../../domain/screen_stabilizer/screen_stabilizer.dart';
@@ -28,27 +31,31 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     _courseFuture = getIt<CourseRepository>()
         .getCourseById(widget.courseId)
         .then((course) {
-          if (course != null) {
-            setState(() {
-              if (course.modules.isNotEmpty &&
-                  course.modules[0].lessons.isNotEmpty) {
-                _selectedLesson = course.modules[0].lessons[0];
-                _currentVideoUrl = course.modules[0].videoUrl;
-                _initializeVideo(_currentVideoUrl); // Initialize module video
-              }
-            });
+      if (course != null) {
+        setState(() {
+          // Find the first module that actually has lessons
+          final firstModuleWithLessons = course.modules.cast<Module?>().firstWhere(
+                (m) => m != null && m.lessons.isNotEmpty,
+                orElse: () => null,
+              );
+
+          if (firstModuleWithLessons != null) {
+            _selectedLesson = firstModuleWithLessons.lessons[0];
+            _currentVideoUrl = firstModuleWithLessons.videoUrl;
+            _initializeVideo(_currentVideoUrl); // Initialize module video
           }
-          return course;
         });
+      }
+      return course;
+    });
   }
 
   @override
   void dispose() {
-    _videoController?.dispose(); // Clean up controller
+    _videoController?.dispose();
     super.dispose();
   }
 
-  // Helper to handle Google Drive URLs and initialize player
   void _initializeVideo(String? url) async {
     await _videoController?.dispose();
     _videoController = null;
@@ -64,12 +71,11 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
       noVideoAvailable = false;
     });
 
-    // Convert Drive preview link to direct stream link if necessary
     final directUrl = _convertDriveUrl(url);
 
     _videoController = VideoPlayerController.networkUrl(Uri.parse(directUrl))
       ..initialize().then((_) {
-        setState(() {}); // Refresh to show video player
+        setState(() {});
       });
   }
 
@@ -83,6 +89,20 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
       }
     }
     return url;
+  }
+
+  IconData _getResourceIcon(ResourceType type) {
+    switch (type) {
+      case ResourceType.pdf:
+        return Icons.picture_as_pdf;
+      case ResourceType.excel:
+        return Icons.table_chart;
+      case ResourceType.ppt:
+        return Icons.slideshow;
+      case ResourceType.other:
+      default:
+        return Icons.insert_drive_file;
+    }
   }
 
   @override
@@ -103,7 +123,6 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
           return LayoutBuilder(
             builder: (context, constraints) {
               if (constraints.maxWidth > 900) {
-                // Desktop/Tablet Layout
                 return Row(
                   children: [
                     SizedBox(width: 300, child: _buildSidebar(course)),
@@ -112,7 +131,6 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
                   ],
                 );
               } else {
-                // Mobile Layout
                 return Column(
                   children: [
                     Expanded(child: _buildContentArea()),
@@ -129,10 +147,13 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
   }
 
   Widget _buildSidebar(Course course) {
+    // Only display modules that have lessons
+    final modulesWithLessons = course.modules.where((m) => m.lessons.isNotEmpty).toList();
+
     return ListView.builder(
-      itemCount: course.modules.length,
+      itemCount: modulesWithLessons.length,
       itemBuilder: (context, index) {
-        final module = course.modules[index];
+        final module = modulesWithLessons[index];
         return ExpansionTile(
           initiallyExpanded: index == 0,
           title: Text(
@@ -153,7 +174,6 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
                 if (_selectedLesson?.id != lesson.id) {
                   setState(() {
                     _selectedLesson = lesson;
-                    // If switching to a lesson in a module with a different video, update player
                     if (_currentVideoUrl != module.videoUrl) {
                       _currentVideoUrl = module.videoUrl;
                       _initializeVideo(_currentVideoUrl);
@@ -208,7 +228,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
                         ),
                       )
                     : noVideoAvailable
-                    ? Center(child: Text('No Video Available!', style: TextStyle(color: Colors.white),))
+                    ? const Center(child: Text('No Video Available!', style: TextStyle(color: Colors.white),))
                     : const Center(
                         child: CircularProgressIndicator(color: Colors.white),
                       ),
@@ -241,18 +261,20 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
           const SizedBox(height: 8),
           Wrap(
             spacing: 12,
-            children: [
-              ActionChip(
-                avatar: const Icon(Icons.picture_as_pdf, size: 16),
-                label: const Text('Lecture_Notes.pdf'),
-                onPressed: () {},
-              ),
-              ActionChip(
-                avatar: const Icon(Icons.table_chart, size: 16),
-                label: const Text('Project_Template.xlsx'),
-                onPressed: () {},
-              ),
-            ],
+            runSpacing: 8,
+            children: _selectedLesson!.resources.map((resource) {
+              return ActionChip(
+                avatar: Icon(_getResourceIcon(resource.type), size: 16),
+                label: Text(resource.title),
+                onPressed: () {
+                  // use dio to download the file.
+                  getIt<NetworkManager>().downloadFile(resource.url);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Opening ${resource.title}...')),
+                  );
+                },
+              );
+            }).toList(),
           ),
           const SizedBox(height: 40),
           Center(

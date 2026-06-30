@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:flutter/foundation.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class NetworkManager {
   late final Dio _dio;
@@ -55,12 +56,12 @@ class NetworkManager {
 
           print(
             '''
-🚀 REQUEST
-URL: ${options.uri}
-METHOD: ${options.method}
-HEADERS: ${options.headers}
-BODY: ${options.data}
-''',
+        🚀 REQUEST
+        URL: ${options.uri}
+        METHOD: ${options.method}
+        HEADERS: ${options.headers}
+        BODY: ${options.data}
+        ''',
           );
 
           handler.next(options);
@@ -68,11 +69,11 @@ BODY: ${options.data}
         onResponse: (response, handler) {
           print(
             '''
-✅ RESPONSE
-URL: ${response.requestOptions.uri}
-STATUS: ${response.statusCode}
-DATA: ${response.data}
-''',
+        ✅ RESPONSE
+        URL: ${response.requestOptions.uri}
+        STATUS: ${response.statusCode}
+        DATA: ${response.data}
+        ''',
           );
 
           handler.next(response);
@@ -80,11 +81,11 @@ DATA: ${response.data}
         onError: (error, handler) {
           print(
             '''
-❌ ERROR
-URL: ${error.requestOptions.uri}
-TYPE: ${error.type}
-MESSAGE: ${error.message}
-''',
+        ❌ ERROR
+        URL: ${error.requestOptions.uri}
+        TYPE: ${error.type}
+        MESSAGE: ${error.message}
+        ''',
           );
 
           handler.reject(
@@ -99,6 +100,30 @@ MESSAGE: ${error.message}
         },
       ),
     );
+  }
+
+  Future<T> get<T>({
+    required String path,
+    Map<String, dynamic>? queryParameters,
+    Map<String, dynamic>? headers,
+    required T Function(dynamic data) converter,
+  }) async {
+    try {
+      final response = await _dio.get(
+        path,
+        queryParameters: queryParameters,
+        options: Options(headers: headers),
+      );
+
+      return converter(response.data);
+    } on DioException catch (e) {
+      throw NetworkException(
+        message: e.message ?? 'Unknown network error',
+        statusCode: e.response?.statusCode,
+      );
+    } catch (e) {
+      throw NetworkException(message: e.toString());
+    }
   }
 
   Future<T> post<T>({
@@ -124,6 +149,19 @@ MESSAGE: ${error.message}
       );
     } catch (e) {
       throw NetworkException(message: e.toString());
+    }
+  }
+
+  Future<void> downloadFile(String url) async {
+    try {
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        throw NetworkException(message: 'Could not launch $url');
+      }
+    } catch (e) {
+      throw NetworkException(message: 'Error launching browser: $e');
     }
   }
 
