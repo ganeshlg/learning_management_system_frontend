@@ -1,6 +1,7 @@
 import 'package:get_it/get_it.dart';
 import 'package:learning_management_system_student/data/repositories/remote/remote_auth_repository.dart';
 import 'package:learning_management_system_student/data/repositories/remote/remote_course_repository.dart';
+import 'package:learning_management_system_student/domain/constants/AppConstants.dart';
 import '../../data/mock/mock_auth_repository.dart';
 import '../../data/mock/mock_course_repository.dart';
 import '../../data/mock/mock_payment_repository.dart';
@@ -26,8 +27,7 @@ void setupServiceLocator() {
   //Network Manager
   getIt.registerLazySingleton<NetworkManager>(
     () => NetworkManager(
-      // baseUrl: 'http://localhost:8000/api',
-      baseUrl: 'https://learning-management-system-api-gateway-v1.onrender.com/api',
+      baseUrl: AppConstants.baseUrl,
       allowBadCertificates: false,
     ),
   );

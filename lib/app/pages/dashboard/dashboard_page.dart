@@ -8,6 +8,7 @@ import '../../../domain/repositories/course_repository.dart';
 import '../../../domain/repositories/progress_repository.dart';
 import '../../../domain/services/service_locator.dart';
 import '../../../domain/screen_stabilizer/screen_stabilizer.dart';
+import 'package:razorpay_web/razorpay_web.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key, required this.name});
@@ -21,11 +22,17 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage> {
   late Future<List<Course>> _purchasedCoursesFuture;
   late Future<List<Course>> _availableCoursesFuture;
+  late Razorpay _razorpay;
+  late Course selectedCourse;
 
   @override
   void initState() {
     super.initState();
     _loadData();
+    _razorpay = Razorpay();
+    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
+    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
+    _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       QuickAlert.show(
         context: context,
@@ -45,6 +52,34 @@ class _DashboardPageState extends State<DashboardPage> {
         borderRadius: 10,
       );
     });
+  }
+
+  void _handlePaymentSuccess(PaymentSuccessResponse response) {
+    print('Success: ${response.paymentId}');
+    handleSuccess();
+    // Do something when payment succeeds
+  }
+
+  Future<void> handleSuccess() async {
+    await getIt<CourseRepository>().purchaseCourse(selectedCourse.id);
+    _refreshCourses();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Successfully purchased ${selectedCourse.title}!'),
+        ),
+      );
+    }
+  }
+
+  void _handlePaymentError(PaymentFailureResponse response) {
+    print('Error: ${response.code} - ${response.message}');
+    // Do something when payment fails
+  }
+
+  void _handleExternalWallet(ExternalWalletResponse response) {
+    print('External Wallet: ${response.walletName}');
+    // Do something when an external wallet is selected
   }
 
   Future<void> _loadData() async {
@@ -229,9 +264,23 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
                 itemBuilder: (context, index) {
                   final course = courses[index];
+                  selectedCourse = courses[index];
                   return _AvailableCourseCard(
                     course: course,
-                    onBuy: () => _showRazorpayMock(course),
+                    // onBuy: () => _showRazorpayMock(course),
+                    onBuy: () {
+                      var options = {
+                        'key': 'rzp_test_T8vzORpiM50W5O',
+                        'amount': (selectedCourse.price * 100).toString(),
+                        'name': selectedCourse.title,
+                        'description': selectedCourse.description,
+                        'prefill': {
+                          'contact': '9000090000',
+                          'email': 'test@razorpay.com',
+                        },
+                      };
+                      _razorpay.open(options, context: context);
+                    },
                   );
                 },
               );

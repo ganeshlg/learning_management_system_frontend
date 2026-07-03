@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:learning_management_system_student/app/pages/payment/payment_page.dart';
 import '../pages/enrollment/enrollment_page.dart';
 import '../pages/auth/login_page.dart';
 import '../pages/auth/register_page.dart';
@@ -12,6 +13,7 @@ class AppRouter {
     initialLocation: '/',
     routes: [
       GoRoute(path: '/', builder: (context, state) => const EnrollmentPage()),
+      // GoRoute(path: '/', builder: (context, state) => PaymentPage()),
       GoRoute(
         path: '/auth',
         builder: (context, state) => LoginPage(),
