@@ -121,7 +121,10 @@ class RemoteCourseRepository extends CourseRepository {
     return Module(
       id: json['id']?.toString() ?? '',
       title: json['title'] ?? 'Untitled Module',
-      videoUrl: json['video_url'],
+      videoUrl: json['video_url'] ?? json['recorded_video_url'],
+      type: json['type'],
+      liveLink: json['live_link'],
+      recordedVideoUrl: json['recorded_video_url'],
       lessons: (json['lessons'] as List?)
               ?.map((l) => _mapLesson(l))
               .toList() ??

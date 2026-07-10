@@ -6,6 +6,9 @@ class Module {
   final String title;
   final List<Lesson> lessons;
   final String? videoUrl;
+  final String? type;
+  final String? liveLink;
+  final String? recordedVideoUrl;
   final LiveSession? liveSession;
 
   Module({
@@ -13,6 +16,9 @@ class Module {
     required this.title,
     required this.lessons,
     this.videoUrl,
-    this.liveSession
+    this.type,
+    this.liveLink,
+    this.recordedVideoUrl,
+    this.liveSession,
   });
 }

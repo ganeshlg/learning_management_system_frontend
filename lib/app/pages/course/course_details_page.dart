@@ -20,6 +20,7 @@ class CourseDetailsPage extends StatefulWidget {
 
 class _CourseDetailsPageState extends State<CourseDetailsPage> {
   late Future<Course?> _courseFuture;
+  Module? _selectedModule;
   Lesson? _selectedLesson;
   VideoPlayerController? _videoController;
   String? _currentVideoUrl;
@@ -40,7 +41,8 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
               );
 
           if (firstModuleWithLessons != null) {
-            _selectedLesson = firstModuleWithLessons.lessons[0];
+            _selectedModule = firstModuleWithLessons;
+            _selectedLesson = null;
             _currentVideoUrl = firstModuleWithLessons.videoUrl;
             _initializeVideo(_currentVideoUrl); // Initialize module video
           }
@@ -124,6 +126,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
             builder: (context, constraints) {
               if (constraints.maxWidth > 900) {
                 return Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     SizedBox(width: 300, child: _buildSidebar(course)),
                     const VerticalDivider(width: 1),
@@ -133,9 +136,9 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
               } else {
                 return Column(
                   children: [
-                    Expanded(child: _buildContentArea()),
+                    SizedBox(height: 250, child: _buildSidebar(course)),
                     const Divider(height: 1),
-                    SizedBox(height: 200, child: _buildSidebar(course)),
+                    Expanded(child: _buildContentArea()),
                   ],
                 );
               }
@@ -148,142 +151,278 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
 
   Widget _buildSidebar(Course course) {
     // Only display modules that have lessons
-    final modulesWithLessons = course.modules.where((m) => m.lessons.isNotEmpty).toList();
+    final modulesWithLessons =
+        course.modules.where((m) => m.lessons.isNotEmpty).toList();
 
     return ListView.builder(
+      padding: EdgeInsets.zero,
       itemCount: modulesWithLessons.length,
       itemBuilder: (context, index) {
         final module = modulesWithLessons[index];
         return ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+          childrenPadding: EdgeInsets.zero,
+          shape: const RoundedRectangleBorder(side: BorderSide.none),
+          collapsedShape: const RoundedRectangleBorder(side: BorderSide.none),
           initiallyExpanded: index == 0,
+          expandedCrossAxisAlignment: CrossAxisAlignment.start,
+          expandedAlignment: Alignment.topLeft,
+          onExpansionChanged: (expanded) {
+            if (expanded) {
+              setState(() {
+                _selectedModule = module;
+                _selectedLesson = null;
+                if (_currentVideoUrl != module.videoUrl) {
+                  _currentVideoUrl = module.videoUrl;
+                  _initializeVideo(_currentVideoUrl);
+                }
+              });
+            }
+          },
           title: Text(
             module.title,
-            style: const TextStyle(fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color:
+                  _selectedModule?.id == module.id && _selectedLesson == null
+                      ? Theme.of(context).primaryColor
+                      : null,
+            ),
           ),
-          children: module.lessons.map((lesson) {
-            return ListTile(
-              selected: _selectedLesson?.id == lesson.id,
-              title: Text(lesson.title),
-              leading: Icon(
-                lesson.isCompleted
-                    ? Icons.check_circle
-                    : Icons.play_circle_outline,
-                color: lesson.isCompleted ? Colors.green : null,
-              ),
-              onTap: () {
-                if (_selectedLesson?.id != lesson.id) {
-                  setState(() {
-                    _selectedLesson = lesson;
-                    if (_currentVideoUrl != module.videoUrl) {
-                      _currentVideoUrl = module.videoUrl;
-                      _initializeVideo(_currentVideoUrl);
+          children:
+              module.lessons.map((lesson) {
+                return ListTile(
+                  dense: true,
+                  contentPadding: const EdgeInsets.only(left: 32, right: 16),
+                  selected: _selectedLesson?.id == lesson.id,
+                  title: Text(lesson.title),
+                  leading: Icon(
+                    lesson.isCompleted
+                        ? Icons.check_circle
+                        : Icons.play_circle_outline,
+                    color: lesson.isCompleted ? Colors.green : null,
+                  ),
+                  onTap: () {
+                    if (_selectedLesson?.id != lesson.id) {
+                      setState(() {
+                        _selectedLesson = lesson;
+                        _selectedModule = module;
+                      });
                     }
-                  });
-                }
-              },
-            );
-          }).toList(),
+                  },
+                );
+              }).toList(),
         );
       },
     );
   }
 
+  Widget _buildLiveLinkCard(String url) {
+    return Card(
+      elevation: 2,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          gradient: LinearGradient(
+            colors: [
+              Theme.of(context).primaryColor.withOpacity(0.05),
+              Theme.of(context).primaryColor.withOpacity(0.15),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.live_tv, size: 48, color: Colors.red),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Live Session',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'The instructor is currently hosting a live session. Click the button below to join the meeting.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 16, color: Colors.black87),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => getIt<NetworkManager>().downloadFile(url),
+                icon: const Icon(Icons.videocam),
+                label: const Text('JOIN NOW'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                  textStyle: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildContentArea() {
-    if (_selectedLesson == null) {
-      return const Center(child: Text('Select a lesson to start learning'));
+    if (_selectedModule == null && _selectedLesson == null) {
+      return const Align(
+        alignment: Alignment.topLeft,
+        child: Padding(
+          padding: EdgeInsets.all(24.0),
+          child: Text('Select a module or lesson to start learning'),
+        ),
+      );
     }
 
+    final displayTitle = _selectedLesson?.title ?? _selectedModule?.title ?? '';
+    final displayNotes =
+        _selectedLesson?.notes ??
+        (_selectedModule != null
+            ? "Select a lesson from the sidebar to view its content."
+            : "");
+
     return SingleChildScrollView(
+      key: ValueKey(_selectedLesson?.id ?? _selectedModule?.id),
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          VideoStabilizer(
-            child: AspectRatio(
-              aspectRatio: 16 / 9,
-              child: Container(
-                color: Colors.black,
-                child:
-                    _videoController != null &&
-                        _videoController!.value.isInitialized
-                    ? GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _videoController!.value.isPlaying
-                                ? _videoController!.pause()
-                                : _videoController!.play();
-                          });
-                        },
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            VideoPlayer(_videoController!),
-                            if (!_videoController!.value.isPlaying)
-                              const Icon(
-                                Icons.play_arrow,
-                                size: 80,
-                                color: Colors.white70,
-                              ),
-                          ],
-                        ),
-                      )
-                    : noVideoAvailable
-                    ? const Center(child: Text('No Video Available!', style: TextStyle(color: Colors.white),))
-                    : const Center(
-                        child: CircularProgressIndicator(color: Colors.white),
-                      ),
+          if (_selectedLesson == null) ...[
+            if (_selectedModule?.videoUrl != null &&
+                _selectedModule!.videoUrl!.isNotEmpty) ...[
+              VideoStabilizer(
+                child: AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: Container(
+                    color: Colors.black,
+                    child:
+                        _videoController != null &&
+                            _videoController!.value.isInitialized
+                        ? GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _videoController!.value.isPlaying
+                                    ? _videoController!.pause()
+                                    : _videoController!.play();
+                              });
+                            },
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                VideoPlayer(_videoController!),
+                                if (!_videoController!.value.isPlaying)
+                                  const Icon(
+                                    Icons.play_arrow,
+                                    size: 80,
+                                    color: Colors.white70,
+                                  ),
+                              ],
+                            ),
+                          )
+                        : const Center(
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                            ),
+                          ),
+                  ),
+                ),
               ),
-            ),
-          ),
-          const SizedBox(height: 24),
+              const SizedBox(height: 24),
+            ] else if (_selectedModule?.type == 'live' &&
+                _selectedModule?.liveLink != null &&
+                _selectedModule!.liveLink!.isNotEmpty) ...[
+              _buildLiveLinkCard(_selectedModule!.liveLink!),
+              const SizedBox(height: 24),
+            ] else ...[
+              VideoStabilizer(
+                child: AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: Container(
+                    color: Colors.black,
+                    child: const Center(
+                      child: Text(
+                        'No Video Available!',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
+          ],
           Text(
-            _selectedLesson!.title,
+            displayTitle,
             style: Theme.of(
               context,
             ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 16),
-          const Text(
-            'Lesson Notes:',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _selectedLesson!.notes ??
-                'In this lesson, we will cover the core concepts of ${_selectedLesson!.title}. Follow along with the provided resources.',
-            style: const TextStyle(fontSize: 16),
-          ),
-          const SizedBox(height: 24),
-          const Text(
-            'Resources:',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 12,
-            runSpacing: 8,
-            children: _selectedLesson!.resources.map((resource) {
-              return ActionChip(
-                avatar: Icon(_getResourceIcon(resource.type), size: 16),
-                label: Text(resource.title),
-                onPressed: () {
-                  // use dio to download the file.
-                  getIt<NetworkManager>().downloadFile(resource.url);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Opening ${resource.title}...')),
-                  );
-                },
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 40),
-          Center(
-            child: ElevatedButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.check),
-              label: const Text('Mark as Complete'),
+          if (_selectedLesson != null) ...[
+            const SizedBox(height: 16),
+            const Text(
+              'Lesson Notes:',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             ),
-          ),
+            const SizedBox(height: 8),
+            Text(
+              displayNotes,
+              style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Resources:',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 12,
+              runSpacing: 8,
+              children:
+                  _selectedLesson!.resources.map((resource) {
+                    return ActionChip(
+                      avatar: Icon(_getResourceIcon(resource.type), size: 16),
+                      label: Text(resource.title),
+                      onPressed: () {
+                        // use dio to download the file.
+                        getIt<NetworkManager>().downloadFile(resource.url);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Opening ${resource.title}...'),
+                          ),
+                        );
+                      },
+                    );
+                  }).toList(),
+            ),
+            // const SizedBox(height: 40),
+            // Center(
+            //   child: ElevatedButton.icon(
+            //     onPressed: () {},
+            //     icon: const Icon(Icons.check),
+            //     label: const Text('Mark as Complete'),
+            //   ),
+            // ),
+          ] else if (_selectedModule != null) ...[
+            const SizedBox(height: 16),
+            Text(displayNotes, style: const TextStyle(fontSize: 16)),
+          ],
         ],
       ),
     );

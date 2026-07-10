@@ -312,68 +312,162 @@ class _PurchasedCourseCardState extends State<_PurchasedCourseCard> {
     );
   }
 
+  ImageProvider getImageProvider() {
+    final url = widget.course.thumbnailUrl;
+
+    if (url.isNotEmpty && url.startsWith('http')) {
+      return NetworkImage(url);
+    }
+
+    return const AssetImage('assets/default_course.png');
+  }
+
   @override
   Widget build(BuildContext context) {
+    // return GestureDetector(
+    //   onTap: () => context.go('/course/${widget.course.id}'),
+    //   child: Container(
+    //     width: 300,
+    //     decoration: BoxDecoration(
+    //       borderRadius: BorderRadius.circular(12),
+    //       image: DecorationImage(
+    //         image: widget.course.thumbnailUrl.startsWith('http')
+    //             ? getImageProvider()
+    //             : AssetImage(widget.course.thumbnailUrl),
+    //         fit: BoxFit.cover,
+    //         colorFilter: ColorFilter.mode(
+    //           Colors.black.withOpacity(0.3),
+    //           BlendMode.darken,
+    //         ),
+    //       ),
+    //     ),
+    //     padding: const EdgeInsets.all(16),
+    //     child: Column(
+    //       crossAxisAlignment: CrossAxisAlignment.start,
+    //       mainAxisAlignment: MainAxisAlignment.end,
+    //       children: [
+    //         Text(
+    //           widget.course.title,
+    //           style: const TextStyle(
+    //             color: Colors.white,
+    //             fontWeight: FontWeight.bold,
+    //             fontSize: 18,
+    //           ),
+    //           maxLines: 2,
+    //           overflow: TextOverflow.ellipsis,
+    //         ),
+    //         const SizedBox(height: 8),
+    //         FutureBuilder<double>(
+    //           future: _progressFuture,
+    //           builder: (context, snapshot) {
+    //             final progress = snapshot.data ?? 0.0;
+    //             return Column(
+    //               crossAxisAlignment: CrossAxisAlignment.start,
+    //               children: [
+    //                 LinearProgressIndicator(
+    //                   value: progress,
+    //                   backgroundColor: Colors.white24,
+    //                   valueColor: const AlwaysStoppedAnimation(
+    //                     Colors.greenAccent,
+    //                   ),
+    //                 ),
+    //                 const SizedBox(height: 4),
+    //                 Text(
+    //                   '${(progress * 100).toInt()}% Complete',
+    //                   style: const TextStyle(
+    //                     color: Colors.white70,
+    //                     fontSize: 12,
+    //                   ),
+    //                 ),
+    //               ],
+    //             );
+    //           },
+    //         ),
+    //       ],
+    //     ),
+    //   ),
+    // );
+
     return GestureDetector(
       onTap: () => context.go('/course/${widget.course.id}'),
-      child: Container(
-        width: 300,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          image: DecorationImage(
-            image: widget.course.thumbnailUrl.startsWith('http')
-                ? NetworkImage(widget.course.thumbnailUrl) as ImageProvider
-                : AssetImage(widget.course.thumbnailUrl),
-            fit: BoxFit.cover,
-            colorFilter: ColorFilter.mode(
-              Colors.black.withOpacity(0.3),
-              BlendMode.darken,
-            ),
-          ),
-        ),
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Text(
-              widget.course.title,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: SizedBox(
+          width: 300,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              widget.course.thumbnailUrl.startsWith('http')
+                  ? Image.network(
+                widget.course.thumbnailUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Image.asset(
+                    'assets/default_course.png',
+                    fit: BoxFit.fill,
+                  );
+                },
+              )
+                  : Image.asset(
+                widget.course.thumbnailUrl,
+                fit: BoxFit.cover,
               ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 8),
-            FutureBuilder<double>(
-              future: _progressFuture,
-              builder: (context, snapshot) {
-                final progress = snapshot.data ?? 0.0;
-                return Column(
+
+              // Dark overlay
+              Container(
+                color: Colors.black.withOpacity(0.3),
+              ),
+
+              // Content
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    LinearProgressIndicator(
-                      value: progress,
-                      backgroundColor: Colors.white24,
-                      valueColor: const AlwaysStoppedAnimation(
-                        Colors.greenAccent,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
                     Text(
-                      '${(progress * 100).toInt()}% Complete',
+                      widget.course.title,
                       style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 12,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
                       ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 8),
+                    FutureBuilder<double>(
+                      future: _progressFuture,
+                      builder: (context, snapshot) {
+                        final progress = snapshot.data ?? 0.0;
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            LinearProgressIndicator(
+                              value: progress,
+                              backgroundColor: Colors.white24,
+                              valueColor: const AlwaysStoppedAnimation(
+                                Colors.greenAccent,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${(progress * 100).toInt()}% Complete',
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ],
-                );
-              },
-            ),
-          ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

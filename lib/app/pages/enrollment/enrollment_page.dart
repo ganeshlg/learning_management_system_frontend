@@ -160,7 +160,7 @@ class _BenefitCard extends StatelessWidget {
           children: [
             Icon(
               icon,
-              size: 50,
+              size: 35,
               color: Theme.of(context).colorScheme.primary,
             ),
             const SizedBox(height: 16),
