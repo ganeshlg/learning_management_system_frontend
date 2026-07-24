@@ -50,25 +50,101 @@ class RemoteAuthRepository implements AuthRepository {
     required String name,
     required String email,
     required String password,
+    required String fullName,
+    required String mobileNumber,
+    required String gender,
+    required String dateOfBirth,
+    required String address,
+    required String cityStatePin,
+    required String emergencyContact,
+    required String educationalQualification,
+    required String collegeUniversity,
+    required String yearOfGraduation,
+    required String currentStatus,
+    required String currentOrganization,
+    required String totalExperience,
+    required String businessName,
+    required String areasOfInterest,
+    required String whyJoinProgram,
+    required String businessIdea,
+    required String skillsToDevelop,
+    required String howHeardAboutProgram,
+    required String documentsEnclosed,
+    required String declaration,
+    required String signature,
+    required String declarationDate,
   }) async {
-    // Capture raw map to check for user data in registration response
+    final body = {
+      'name': name,
+      'email': email,
+      'password': password,
+      'full_name': fullName,
+      'mobile_number': mobileNumber,
+      'gender': gender,
+      'date_of_birth': dateOfBirth,
+      'address': address,
+      'city_state_pin': cityStatePin,
+      'emergency_contact': emergencyContact,
+      'educational_qualification': educationalQualification,
+      'college_university': collegeUniversity,
+      'year_of_graduation': yearOfGraduation,
+      'current_status': currentStatus,
+      'current_organization': currentOrganization,
+      'total_experience': totalExperience,
+      'business_name': businessName,
+      'areas_of_interest': areasOfInterest,
+      'why_join_program': whyJoinProgram,
+      'business_idea': businessIdea,
+      'skills_to_develop': skillsToDevelop,
+      'how_heard_about_program': howHeardAboutProgram,
+      'documents_enclosed': documentsEnclosed,
+      'declaration': declaration,
+      'signature': signature,
+      'declaration_date': declarationDate,
+    };
+
     final responseMap = await getIt<NetworkManager>().post<Map<String, dynamic>>(
       path: '/register',
-      body: {'name': name, 'email': email, 'password': password},
+      body: body,
       converter: (json) => json as Map<String, dynamic>,
     );
 
     final registrationResponse = RegistrationResponse.fromJson(responseMap);
 
     if (registrationResponse.isSuccess) {
-      // Try to parse user from registration response
       LoginResponse loginData = LoginResponse.fromJson(responseMap);
       
-      // If API didn't return user object but registration succeeded, manually create session
       if (loginData.user == null) {
         loginData = LoginResponse(
           message: 'Registration successful',
-          user: User(id: 0, name: name, email: email),
+          user: User(
+            id: 0,
+            name: name,
+            email: email,
+            fullName: fullName,
+            mobileNumber: mobileNumber,
+            gender: gender,
+            dateOfBirth: dateOfBirth,
+            address: address,
+            cityStatePin: cityStatePin,
+            emergencyContact: emergencyContact,
+            educationalQualification: educationalQualification,
+            collegeUniversity: collegeUniversity,
+            yearOfGraduation: yearOfGraduation,
+            currentStatus: currentStatus,
+            currentOrganization: currentOrganization,
+            totalExperience: totalExperience,
+            businessName: businessName,
+            areasOfInterest: areasOfInterest,
+            whyJoinProgram: whyJoinProgram,
+            businessIdea: businessIdea,
+            skillsToDevelop: skillsToDevelop,
+            howHeardAboutProgram: howHeardAboutProgram,
+            documentsEnclosed: documentsEnclosed,
+            declaration: declaration.toLowerCase() == 'true',
+            signature: signature,
+            declarationDate: declarationDate,
+          ),
         );
       }
 
