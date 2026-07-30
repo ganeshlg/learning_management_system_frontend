@@ -35,7 +35,7 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage> {
   @override
   void didUpdateWidget(covariant PaymentSuccessPage oldWidget) {
     super.didUpdateWidget(oldWidget);
-      _fetchPurchaseDetails();
+    _fetchPurchaseDetails();
   }
 
   Future<void> _fetchPurchaseDetails() async {

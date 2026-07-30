@@ -49,16 +49,30 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
         // Retry
         _verifyPayment();
       } else {
-        // Failed to verify after retries
+        // Failed to verify after retries - Redirect to EMI Selection
         if (mounted) {
-          setState(() {}); // Trigger build to show error
+          final eid = EncryptionUtil.encrypt("${widget.email}|${widget.courseId}");
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Purchase not found. Redirecting to payment options..."),
+              backgroundColor: Colors.orange,
+            ),
+          );
+          context.go('/payment/$eid');
         }
       }
     } catch (e) {
       if (_attempts < _maxAttempts) {
         _verifyPayment();
       } else if (mounted) {
-        setState(() {});
+        final eid = EncryptionUtil.encrypt("${widget.email}|${widget.courseId}");
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Unable to verify payment. Returning to selection..."),
+            backgroundColor: Colors.red,
+          ),
+        );
+        context.go('/payment/$eid');
       }
     }
   }
