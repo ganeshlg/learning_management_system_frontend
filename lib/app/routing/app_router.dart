@@ -17,9 +17,9 @@ import '../../domain/entities/course.dart';
 
 class AppRouter {
   static final router = GoRouter(
-    // initialLocation: '/',
+    initialLocation: '/',
     // initialLocation: '/payment-success/Z2FuZXNobGcyMTA4QGdtYWlsLmNvbXwyNzQ4Njc4Mjk1',
-    initialLocation: '/auth',
+    // initialLocation: '/auth',
     routes: [
       GoRoute(path: '/', builder: (context, state) => const EnrollmentPage()),
       GoRoute(path: '/enroll', builder: (context, state) => const StudentEnrollmentPage()),
