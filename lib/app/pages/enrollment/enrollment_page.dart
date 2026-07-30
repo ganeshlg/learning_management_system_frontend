@@ -65,7 +65,7 @@ class _HeroSection extends StatelessWidget {
               alignment: WrapAlignment.center,
               children: [
                 ElevatedButton(
-                  onPressed: () => context.go('/auth/register'),
+                  onPressed: () => context.go('/enroll'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Theme.of(context).colorScheme.tertiary,
                     foregroundColor: Colors.black,

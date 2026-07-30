@@ -8,10 +8,8 @@ class MockCourseRepository implements CourseRepository {
     Course(
       id: '1',
       title: 'Civil Entrepreneurship Masterclass',
-      description:
-          'Learn how to start and scale your civil engineering business.',
-      thumbnailUrl:
-          'assets/course_image_1.png',
+      description: 'Learn how to start and scale your civil engineering business.',
+      thumbnailUrl: 'assets/course_image_1.png',
       price: 10000,
       duration: const Duration(hours: 100),
       instructorName: 'Er. Ganesh R',
@@ -566,6 +564,16 @@ class MockCourseRepository implements CourseRepository {
       instructorName: 'Er. S. Lakshmi',
       modules: [],
     ),
+    Course(
+      id: '2748678295',
+      title: 'Professional Civil Entrepreneurship',
+      description: 'Advanced curriculum for established civil engineers.',
+      thumbnailUrl: 'assets/course_image_1.png',
+      price: 15000,
+      duration: const Duration(hours: 120),
+      instructorName: 'Er. Ganesh R',
+      modules: [],
+    ),
   ];
 
   final List<String> _purchasedCourseIds = [];
@@ -586,7 +594,11 @@ class MockCourseRepository implements CourseRepository {
   @override
   Future<Course?> getCourseById(String id) async {
     await Future.delayed(const Duration(milliseconds: 500));
-    return _courses.firstWhere((c) => c.id == id);
+    try {
+      return _courses.firstWhere((c) => c.id == id);
+    } catch (_) {
+      return null;
+    }
   }
 
   @override

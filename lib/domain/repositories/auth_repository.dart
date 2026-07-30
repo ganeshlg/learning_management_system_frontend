@@ -33,7 +33,4 @@ abstract class AuthRepository {
     required String declarationDate,
   });
   Future<void> logout();
-  Future<void> sendOtp(String email);
-  Future<bool> verifyOtp(String email, String otp);
-  Future<void> resetPassword(String email, String newPassword);
 }

@@ -8,6 +8,7 @@ import '../../../domain/repositories/course_repository.dart';
 import '../../../domain/repositories/progress_repository.dart';
 import '../../../domain/services/service_locator.dart';
 import '../../../domain/screen_stabilizer/screen_stabilizer.dart';
+import '../../../domain/utils/encryption_util.dart';
 import 'package:razorpay_web/razorpay_web.dart';
 
 class DashboardPage extends StatefulWidget {
@@ -267,19 +268,9 @@ class _DashboardPageState extends State<DashboardPage> {
                   selectedCourse = courses[index];
                   return _AvailableCourseCard(
                     course: course,
-                    // onBuy: () => _showRazorpayMock(course),
                     onBuy: () {
-                      var options = {
-                        'key': 'rzp_test_T8vzORpiM50W5O',
-                        'amount': (selectedCourse.price * 100).toString(),
-                        'name': selectedCourse.title,
-                        'description': selectedCourse.description,
-                        'prefill': {
-                          'contact': '9000090000',
-                          'email': 'test@razorpay.com',
-                        },
-                      };
-                      _razorpay.open(options, context: context);
+                      final encryptedId = EncryptionUtil.encrypt(course.id);
+                      context.push('/payment/$encryptedId');
                     },
                   );
                 },

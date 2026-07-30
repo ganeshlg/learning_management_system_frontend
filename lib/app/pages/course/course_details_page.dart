@@ -6,6 +6,7 @@ import '../../../domain/entities/module.dart';
 import '../../../domain/entities/lesson.dart';
 import '../../../domain/entities/resource.dart';
 import '../../../domain/repositories/course_repository.dart';
+import '../../../domain/repositories/progress_repository.dart';
 import '../../../domain/services/service_locator.dart';
 import '../../../domain/screen_stabilizer/screen_stabilizer.dart';
 
@@ -25,14 +26,28 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
   VideoPlayerController? _videoController;
   String? _currentVideoUrl;
   bool noVideoAvailable = false;
+  final Map<String, bool> _lessonCompletionStatus = {};
 
   @override
   void initState() {
     super.initState();
-    _courseFuture = getIt<CourseRepository>()
-        .getCourseById(widget.courseId)
-        .then((course) {
+    _loadCourse();
+  }
+
+  void _loadCourse() {
+    final courseRepo = getIt<CourseRepository>();
+
+    _courseFuture = courseRepo.getCourseById(widget.courseId).then((course) async {
       if (course != null) {
+        // Load initial completion status for all lessons in the course
+        for (var module in course.modules) {
+          for (var lesson in module.lessons) {
+            final completed = await getIt<ProgressRepository>()
+                .isLessonCompleted(course.id, lesson.id);
+            _lessonCompletionStatus[lesson.id] = completed;
+          }
+        }
+
         setState(() {
           // Find the first module that actually has lessons
           final firstModuleWithLessons = course.modules.cast<Module?>().firstWhere(
@@ -191,16 +206,17 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
           ),
           children:
               module.lessons.map((lesson) {
+                final isCompleted = _lessonCompletionStatus[lesson.id] ?? false;
                 return ListTile(
                   dense: true,
                   contentPadding: const EdgeInsets.only(left: 32, right: 16),
                   selected: _selectedLesson?.id == lesson.id,
                   title: Text(lesson.title),
                   leading: Icon(
-                    lesson.isCompleted
+                    isCompleted
                         ? Icons.check_circle
                         : Icons.play_circle_outline,
-                    color: lesson.isCompleted ? Colors.green : null,
+                    color: isCompleted ? Colors.green : null,
                   ),
                   onTap: () {
                     if (_selectedLesson?.id != lesson.id) {
@@ -411,14 +427,31 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
                     );
                   }).toList(),
             ),
-            // const SizedBox(height: 40),
-            // Center(
-            //   child: ElevatedButton.icon(
-            //     onPressed: () {},
-            //     icon: const Icon(Icons.check),
-            //     label: const Text('Mark as Complete'),
-            //   ),
-            // ),
+            const SizedBox(height: 40),
+            Center(
+              child: ElevatedButton.icon(
+                onPressed: (_lessonCompletionStatus[_selectedLesson!.id] ?? false)
+                    ? null
+                    : () async {
+                        await getIt<ProgressRepository>().markLessonAsComplete(
+                          widget.courseId,
+                          _selectedLesson!.id,
+                        );
+                        setState(() {
+                          _lessonCompletionStatus[_selectedLesson!.id] = true;
+                        });
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Lesson marked as complete!')),
+                        );
+                      },
+                icon: const Icon(Icons.check),
+                label: Text(
+                  (_lessonCompletionStatus[_selectedLesson!.id] ?? false)
+                      ? 'Completed'
+                      : 'Mark as Complete',
+                ),
+              ),
+            ),
           ] else if (_selectedModule != null) ...[
             const SizedBox(height: 16),
             Text(displayNotes, style: const TextStyle(fontSize: 16)),

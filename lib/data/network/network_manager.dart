@@ -152,6 +152,32 @@ class NetworkManager {
     }
   }
 
+  Future<T> put<T>({
+    required String path,
+    dynamic body,
+    Map<String, dynamic>? queryParameters,
+    Map<String, dynamic>? headers,
+    required T Function(dynamic data) converter,
+  }) async {
+    try {
+      final response = await _dio.put(
+        path,
+        data: body,
+        queryParameters: queryParameters,
+        options: Options(headers: headers),
+      );
+
+      return converter(response.data);
+    } on DioException catch (e) {
+      throw NetworkException(
+        message: e.message ?? 'Unknown network error',
+        statusCode: e.response?.statusCode,
+      );
+    } catch (e) {
+      throw NetworkException(message: e.toString());
+    }
+  }
+
   Future<void> downloadFile(String url) async {
     try {
       final uri = Uri.parse(url);
