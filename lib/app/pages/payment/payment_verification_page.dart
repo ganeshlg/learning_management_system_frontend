@@ -101,10 +101,6 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
                   onPressed: () => _verifyPayment(),
                   child: const Text("RETRY VERIFICATION"),
                 ),
-                TextButton(
-                  onPressed: () => context.go('/dashboard/Student'),
-                  child: const Text("GO TO DASHBOARD"),
-                ),
               ],
             ],
           ),

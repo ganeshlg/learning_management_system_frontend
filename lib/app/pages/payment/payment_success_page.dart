@@ -154,14 +154,6 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage> {
                   const Text("Course Access: FULLY PAID",
                       style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 48),
-                ElevatedButton(
-                  onPressed: () => context.go('/dashboard/Student'),
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 50),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  child: const Text("GO TO DASHBOARD"),
-                ),
               ],
             ),
           ),

@@ -288,12 +288,6 @@ class _EMISelectionPageState extends State<EMISelectionPage> {
               ),
               const SizedBox(height: 8),
               const Text("You have already completed the payment for this course."),
-              const SizedBox(height: 32),
-              ElevatedButton(
-                onPressed: () => context.go('/course/${_course!.id}'),
-                style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16)),
-                child: const Text("GO TO COURSE"),
-              ),
             ],
           ),
         ),
